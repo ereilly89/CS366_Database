@@ -12,6 +12,10 @@ import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import javax.swing.JRadioButton;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.Connection;
+
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import java.awt.Font;
@@ -41,33 +45,17 @@ public class MainWindow {
 	private JRadioButton rdbtnAlbum;
 	private JTextArea searchText;
 	private String username;
-	/**
-	 * Launch the application.
-	 */
-	/*
-	public static void main(String[] args) {
-		
-		
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					MainWindow window = new MainWindow();
-					window.frmDatabase.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}*/
-	
+	private Connection connection;
 
 	/**
 	 * Create the application.
 	 */
-	public MainWindow(String theUser) {
+	
+	public MainWindow(String theUser, Connection connection) {
+		username = theUser;
+		this.connection = connection;
 		initialize();
 		this.frmDatabase.setVisible(true);
-		username = theUser;
 	}
 
 	/**
@@ -77,7 +65,7 @@ public class MainWindow {
 		
 		frmDatabase = new JFrame();
 		frmDatabase.getContentPane().setBackground(new Color(135, 206, 250));
-		frmDatabase.setTitle("Database");
+		frmDatabase.setTitle("Million Song Database Application");
 		frmDatabase.setForeground(Color.BLACK);
 		frmDatabase.setBackground(Color.DARK_GRAY);
 		frmDatabase.setBounds(100, 100, 700, 600);
@@ -187,7 +175,7 @@ public class MainWindow {
 		JMenu menuFile = new JMenu("File");
 		menuBar.add(menuFile);
 		
-		JMenuItem mntmLogin = new JMenuItem("Login/Logout");
+		JMenuItem mntmLogin = new JMenuItem("Login/Logout "+username);
 		menuFile.add(mntmLogin);
 		
 		JMenuItem mntmQuit = new JMenuItem("Quit");

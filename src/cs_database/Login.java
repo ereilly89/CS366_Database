@@ -46,22 +46,17 @@ public class Login extends JFrame {
 					if (Login.authenticate(getUsername(), getPassword(), connection)) {// if successful
 						dispose();
 						username = getUsername();
+						System.out.println(username);
 						//Screen theScreen = new Screen(getUsername());
-						
-						
-						
-						
 						EventQueue.invokeLater(new Runnable() {
 							public void run() {
 								try {
-									MainWindow newWindow = new MainWindow(getUsername());
-									
+									MainWindow newWindow = new MainWindow(getUsername(), connection);
 								} catch (Exception e) {
 									e.printStackTrace();
 								}
 							}
 						});
-						
 						
 					} else {// if not successful
 						lbError.setText("Username or password is incorrect.");
@@ -121,7 +116,16 @@ public class Login extends JFrame {
 
 						///****************************
 						
-						Screen theScreen = new Screen(username);
+						EventQueue.invokeLater(new Runnable() {
+							public void run() {
+								try {
+									MainWindow newWindow = new MainWindow(getUsername(), connection);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
+						});
+						//Screen newScreen = new Screen(getUsername());
 					}
 				} catch (SQLException e1) {
 					e1.printStackTrace();
