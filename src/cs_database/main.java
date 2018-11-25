@@ -26,7 +26,7 @@ public class main extends JFrame{
 	private ResultSet resultSet = null;
 	
 	public static void main(String args[]) throws SQLException {
-		
+		System.out.println("Hello");
 			//try {
 				//Connect user to database
 				main newMain = new main();
