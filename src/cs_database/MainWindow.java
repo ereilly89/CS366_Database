@@ -40,7 +40,7 @@ public class MainWindow {
 	private JRadioButton rdbtnArtist;
 	private JRadioButton rdbtnAlbum;
 	private JTextArea searchText;
-
+	private String username;
 	/**
 	 * Launch the application.
 	 */
@@ -65,17 +65,15 @@ public class MainWindow {
 	 * Create the application.
 	 */
 	public MainWindow(String theUser) {
-		initialize(theUser);
+		initialize();
 		this.frmDatabase.setVisible(true);
+		username = theUser;
 	}
 
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	private void initialize(String theUser) {
-		
-		//Set the username
-		String username = theUser;
+	private void initialize() {
 		
 		frmDatabase = new JFrame();
 		frmDatabase.getContentPane().setBackground(new Color(135, 206, 250));
