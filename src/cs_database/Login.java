@@ -2,6 +2,7 @@ package cs_database;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
@@ -45,7 +46,23 @@ public class Login extends JFrame {
 					if (Login.authenticate(getUsername(), getPassword(), connection)) {// if successful
 						dispose();
 						username = getUsername();
-						Screen theScreen = new Screen(getUsername());
+						//Screen theScreen = new Screen(getUsername());
+						
+						
+						
+						
+						EventQueue.invokeLater(new Runnable() {
+							public void run() {
+								try {
+									MainWindow newWindow = new MainWindow(getUsername());
+									
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
+						});
+						
+						
 					} else {// if not successful
 						lbError.setText("Username or password is incorrect.");
 						txtPassword.setText("");

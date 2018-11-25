@@ -44,6 +44,7 @@ public class MainWindow {
 	/**
 	 * Launch the application.
 	 */
+	/*
 	public static void main(String[] args) {
 		
 		
@@ -57,19 +58,25 @@ public class MainWindow {
 				}
 			}
 		});
-	}
+	}*/
+	
 
 	/**
 	 * Create the application.
 	 */
-	public MainWindow() {
-		initialize();
+	public MainWindow(String theUser) {
+		initialize(theUser);
+		this.frmDatabase.setVisible(true);
 	}
 
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	private void initialize() {
+	private void initialize(String theUser) {
+		
+		//Set the username
+		String username = theUser;
+		
 		frmDatabase = new JFrame();
 		frmDatabase.getContentPane().setBackground(new Color(135, 206, 250));
 		frmDatabase.setTitle("Database");
