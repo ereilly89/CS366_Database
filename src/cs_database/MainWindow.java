@@ -328,6 +328,8 @@ public class MainWindow {
 					}
 				}
 				
+				searchText.setText("");
+				
 				//************************************
 			}
 		});
