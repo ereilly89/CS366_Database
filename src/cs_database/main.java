@@ -26,65 +26,23 @@ public class main extends JFrame{
 	private ResultSet resultSet = null;
 	
 	public static void main(String args[]) throws SQLException {
-		System.out.println("Hello");
-			//try {
-				//Connect user to database
-				main newMain = new main();
-				newMain.Connection();
-				//Prompt user to login using login JFrame object
-				Login newLogin = new Login(connection);
-				
-				//JFrame
-				JFrame login = new JFrame();
-				
-				//Sign-In button
-				JButton signIn = new JButton("Sign In");
-				signIn.setSize(100,200);
-				
-				//Initialize
-				login.add(signIn);
-				
-				
-				/*
-				//	2. 	Ask for student ID and return info about a student
-				
-				Scanner input = new Scanner(System.in);
-				
-				System.out.print("ENTER STUDENT ID: ");
-				int studentIDinput = input.nextInt();
-				
-				CallableStatement cStmt = (CallableStatement) connection.prepareCall("{call getStudentInfo("+studentIDinput+")}");
-				cStmt.execute();
-				ResultSet rs = cStmt.getResultSet();
-				
-				while(rs.next()) {
-					System.out.println("Name: "+rs.getString("sname"));
-					System.out.println("Major: "+rs.getString("major"));
-					System.out.println("Year: "+rs.getString("level"));
-					System.out.println("Age: "+rs.getInt("age"));
-				}
-				
-				//	3. Print out information on all classes
 			
-				main question3 = new main();
-				question3.Connection();
-				String spname = "getClassInfo";
-				question3.getClassInfo(spname);
+		//Connect user to database
+		main newMain = new main();
+		newMain.Connection();
 				
-				//3.b
+		//Prompt user to login using login JFrame object
+		Login newLogin = new Login(connection);
 				
-				main question3b = new main();
-				question3b.Connection();
-				String sqlQuery = "SELECT cname, meets_at, room\r\n" + 
-						"FROM class c;";
-				question3b.simpleQuery(sqlQuery);
+		//JFrame
+		JFrame login = new JFrame();
 				
-				*/
-				//connection.close();
+		//Sign-In button
+		JButton signIn = new JButton("Sign In");
+		signIn.setSize(100,200);
 				
-			//} catch (SQLException e) {
-				//e.printStackTrace();
-			//}
+		//Initialize
+		login.add(signIn);
 	}
 	
 	public void Connection(){

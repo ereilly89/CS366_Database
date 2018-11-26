@@ -56,8 +56,9 @@ public class MainWindow {
 	private String username;//stores the current user of the application
 	private Connection connection;//stores the connection to mysql
 	private String displayLabel;//label for displaying search results
-	private DefaultListModel model; //model for using JList object for search
-	
+	private DefaultListModel searchModel; //model for using JList object for search
+	private DefaultListModel playlistModel; //model for using JList object for playlist
+	private DefaultListModel followModel; //model for using JList object for user following
 	/**
 	 * Create the application.
 	 */
@@ -99,11 +100,13 @@ public class MainWindow {
 		lblPlaylists.setFont(new Font("Tahoma", Font.BOLD, 20));
 		playlistPanel.add(lblPlaylists, "2, 2");
 		
-		JList playlistList = new JList();
+		playlistModel = new DefaultListModel();
+		JList playlistList = new JList(playlistModel);
 		playlistPanel.add(playlistList, "1, 4, 2, 1, fill, fill");
 		JScrollPane playlistScrollPane;
 		playlistScrollPane = new JScrollPane(playlistList, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER); //
 		playlistPanel.add(playlistScrollPane, "1, 4, 2, 1, fill, fill"); //
+		playlistModel.add(0,"(Create Playlist)");
 		
 		JPanel searchPanel = new JPanel();
 		searchPanel.setBackground(new Color(135, 206, 250));
@@ -161,8 +164,8 @@ public class MainWindow {
 		lblSongs.setFont(new Font("Tahoma", Font.BOLD, 20));
 		songsPanel.add(lblSongs, "2, 2");
 		
-		model = new DefaultListModel();
-		JList songsList = new JList(model);
+		searchModel = new DefaultListModel();
+		JList songsList = new JList(searchModel);
 		songsPanel.add(songsList, "1, 4, 2, 1, fill, fill"); 
 		JScrollPane songScrollPane; //
 		songScrollPane = new JScrollPane(songsList, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER); //
@@ -184,7 +187,8 @@ public class MainWindow {
 		lblFollowed.setFont(new Font("Tahoma", Font.BOLD, 20));
 		followedPanel.add(lblFollowed, "2, 2");
 		
-		JList followedList = new JList();
+		followModel = new DefaultListModel();
+		JList followedList = new JList(followModel);
 		followedPanel.add(followedList, "1, 4, 2, 1, fill, fill");
 		JScrollPane followScrollPane; //
 		followScrollPane = new JScrollPane(followedList, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER); //
@@ -269,9 +273,9 @@ public class MainWindow {
 						myCallStmt.execute();
 						ResultSet rs = myCallStmt.getResultSet();
 						
-						model.clear();
+						searchModel.clear();
 						while(rs.next()) {
-							model.addElement(rs.getString("username"));
+							searchModel.addElement(rs.getString("username"));
 						}
 					} catch (SQLException e1) {
 						// TODO Auto-generated catch block
@@ -289,9 +293,9 @@ public class MainWindow {
 						myCallStmt.execute();
 						ResultSet rs = myCallStmt.getResultSet();
 						
-						model.clear();
+						searchModel.clear();
 						while(rs.next()) {
-							model.addElement(rs.getString("title")+"\t"+rs.getString("artistName"));
+							searchModel.addElement(rs.getString("title")+"\t"+rs.getString("artistName"));
 						}
 					} catch (SQLException e1) {
 						// TODO Auto-generated catch block
@@ -309,9 +313,9 @@ public class MainWindow {
 						myCallStmt.execute();
 						ResultSet rs = myCallStmt.getResultSet();
 						
-						model.clear();
+						searchModel.clear();
 						while(rs.next()) {
-							model.addElement(rs.getString("artistName"));
+							searchModel.addElement(rs.getString("artistName"));
 						}
 					} catch (SQLException e1) {
 						// TODO Auto-generated catch block
@@ -329,9 +333,9 @@ public class MainWindow {
 						myCallStmt.execute();
 						ResultSet rs = myCallStmt.getResultSet();
 						
-						model.clear();
+						searchModel.clear();
 						while(rs.next()) {
-							model.addElement(rs.getString("albumName")+"\t"+rs.getString("artistName"));
+							searchModel.addElement(rs.getString("albumName")+"\t"+rs.getString("artistName"));
 						}
 					} catch (SQLException e1) {
 						// TODO Auto-generated catch block
