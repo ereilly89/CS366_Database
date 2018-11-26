@@ -35,7 +35,8 @@ public class Login extends JFrame {
 		// Set title and size
 		setTitle("MillionSongDB App");
 		setSize(1920, 1080);
-
+		setBackground(new Color(135, 206, 250));//Doesn't work for some reason
+		
 		// Create 'Sign In' button
 		JButton btnSign = new JButton("Sign In");
 
