@@ -7,10 +7,13 @@ import javax.swing.JTextField;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import javax.swing.JToolBar;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.JPanel;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -98,6 +101,9 @@ public class MainWindow {
 		
 		JList playlistList = new JList();
 		playlistPanel.add(playlistList, "1, 4, 2, 1, fill, fill");
+		JScrollPane playlistScrollPane;
+		playlistScrollPane = new JScrollPane(playlistList, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER); //
+		playlistPanel.add(playlistScrollPane, "1, 4, 2, 1, fill, fill"); //
 		
 		JPanel searchPanel = new JPanel();
 		searchPanel.setBackground(new Color(135, 206, 250));
@@ -157,7 +163,10 @@ public class MainWindow {
 		
 		model = new DefaultListModel();
 		JList songsList = new JList(model);
-		songsPanel.add(songsList, "1, 4, 2, 1, fill, fill");
+		songsPanel.add(songsList, "1, 4, 2, 1, fill, fill"); 
+		JScrollPane songScrollPane; //
+		songScrollPane = new JScrollPane(songsList, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER); //
+		songsPanel.add(songScrollPane, "1, 4, 2, 1, fill, fill"); //
 		
 		JPanel followedPanel = new JPanel();
 		followedPanel.setBackground(new Color(100, 149, 237));
@@ -177,7 +186,9 @@ public class MainWindow {
 		
 		JList followedList = new JList();
 		followedPanel.add(followedList, "1, 4, 2, 1, fill, fill");
-		
+		JScrollPane followScrollPane; //
+		followScrollPane = new JScrollPane(followedList, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER); //
+		followedPanel.add(followScrollPane, "1, 4, 2, 1, fill, fill"); //
 		JMenuBar menuBar = new JMenuBar();
 		frmDatabase.setJMenuBar(menuBar);
 		
