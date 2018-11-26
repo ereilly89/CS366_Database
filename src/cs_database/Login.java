@@ -31,7 +31,7 @@ public class Login extends JFrame {
 	String sql;
 	
 	public Login(Connection connection) {
-		System.out.println("Hi");
+		
 		// Set title and size
 		setTitle("MillionSongDB App");
 		setSize(1920, 1080);
