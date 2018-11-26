@@ -155,7 +155,8 @@ public class MainWindow {
 		lblSongs.setFont(new Font("Tahoma", Font.BOLD, 20));
 		songsPanel.add(lblSongs, "2, 2");
 		
-		JList songsList = new JList();
+		model = new DefaultListModel();
+		JList songsList = new JList(model);
 		songsPanel.add(songsList, "1, 4, 2, 1, fill, fill");
 		
 		JPanel followedPanel = new JPanel();
@@ -174,8 +175,7 @@ public class MainWindow {
 		lblFollowed.setFont(new Font("Tahoma", Font.BOLD, 20));
 		followedPanel.add(lblFollowed, "2, 2");
 		
-		model = new DefaultListModel();
-		JList followedList = new JList(model);
+		JList followedList = new JList();
 		followedPanel.add(followedList, "1, 4, 2, 1, fill, fill");
 		
 		JMenuBar menuBar = new JMenuBar();
@@ -249,6 +249,27 @@ public class MainWindow {
 				//Display query***********************
 				
 				//USERS
+				
+				if(displayLabel.equals("Users")) {
+					CallableStatement myCallStmt;
+					try {
+						myCallStmt = (CallableStatement) connection.prepareCall("{call searchUsers(?)}");
+						myCallStmt.setString(1, "%"+searchText.getText().trim()+"%");
+						myCallStmt.execute();
+						ResultSet rs = myCallStmt.getResultSet();
+						
+						model.clear();
+						while(rs.next()) {
+							model.addElement(rs.getString("username"));
+						}
+					} catch (SQLException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+				
+				//SONGS
+				
 				if(displayLabel.equals("Songs")) {
 					CallableStatement myCallStmt;
 					try {
@@ -257,8 +278,9 @@ public class MainWindow {
 						myCallStmt.execute();
 						ResultSet rs = myCallStmt.getResultSet();
 						
+						model.clear();
 						while(rs.next()) {
-							model.addElement(rs.getString("title")+", "+rs.getString("artistName"));
+							model.addElement(rs.getString("title")+"\t"+rs.getString("artistName"));
 						}
 					} catch (SQLException e1) {
 						// TODO Auto-generated catch block
@@ -266,13 +288,45 @@ public class MainWindow {
 					}
 				}
 				
-				
-				
-				//SONGS
-				
 				//ARTISTS
 				
+				if(displayLabel.equals("Artists")) {
+					CallableStatement myCallStmt;
+					try {
+						myCallStmt = (CallableStatement) connection.prepareCall("{call searchArtists(?)}");
+						myCallStmt.setString(1, "%"+searchText.getText().trim()+"%");
+						myCallStmt.execute();
+						ResultSet rs = myCallStmt.getResultSet();
+						
+						model.clear();
+						while(rs.next()) {
+							model.addElement(rs.getString("artistName"));
+						}
+					} catch (SQLException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+				
 				//ALBUMS
+				
+				if(displayLabel.equals("Albums")) {
+					CallableStatement myCallStmt;
+					try {
+						myCallStmt = (CallableStatement) connection.prepareCall("{call searchAlbums(?)}");
+						myCallStmt.setString(1, "%"+searchText.getText().trim()+"%");
+						myCallStmt.execute();
+						ResultSet rs = myCallStmt.getResultSet();
+						
+						model.clear();
+						while(rs.next()) {
+							model.addElement(rs.getString("albumName")+"\t"+rs.getString("artistName"));
+						}
+					} catch (SQLException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
 				
 				//************************************
 			}
