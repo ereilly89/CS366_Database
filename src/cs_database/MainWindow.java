@@ -175,11 +175,29 @@ public class MainWindow {
 		JMenu menuFile = new JMenu("File");
 		menuBar.add(menuFile);
 		
+		//*********************************FILE MENU**************************************//
+		
+		//Create Login/Logout option
 		JMenuItem mntmLogin = new JMenuItem("Login/Logout "+username);
 		menuFile.add(mntmLogin);
 		
+		mntmLogin.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				frmDatabase.dispose();
+				Login newLogin = new Login(connection);
+			}
+		});
+		
+		//Create Quit option
 		JMenuItem mntmQuit = new JMenuItem("Quit");
 		menuFile.add(mntmQuit);
+		
+		mntmQuit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}
+		});
+		//********************************************************************
 	}
 
 	public JRadioButton getRdbtnUser() {
