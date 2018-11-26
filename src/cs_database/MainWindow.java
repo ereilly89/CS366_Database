@@ -15,6 +15,9 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -23,6 +26,8 @@ import javax.swing.JTextArea;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.RowSpec;
+import com.mysql.jdbc.CallableStatement;
+
 import net.miginfocom.swing.MigLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import javax.swing.SwingConstants;
@@ -34,6 +39,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.DropMode;
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultListModel;
 
 public class MainWindow {
 
@@ -44,9 +50,11 @@ public class MainWindow {
 	private JRadioButton rdbtnArtist;
 	private JRadioButton rdbtnAlbum;
 	private JTextArea searchText;
-	private String username;
-	private Connection connection;
-
+	private String username;//stores the current user of the application
+	private Connection connection;//stores the connection to mysql
+	private String displayLabel;//label for displaying search results
+	private DefaultListModel model; //model for using JList object for search
+	
 	/**
 	 * Create the application.
 	 */
@@ -166,7 +174,8 @@ public class MainWindow {
 		lblFollowed.setFont(new Font("Tahoma", Font.BOLD, 20));
 		followedPanel.add(lblFollowed, "2, 2");
 		
-		JList followedList = new JList();
+		model = new DefaultListModel();
+		JList followedList = new JList(model);
 		followedPanel.add(followedList, "1, 4, 2, 1, fill, fill");
 		
 		JMenuBar menuBar = new JMenuBar();
@@ -197,6 +206,79 @@ public class MainWindow {
 				System.exit(0);
 			}
 		});
+		//********************************************************************
+		
+		//When USER radio button clicked
+		rdbtnUser.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				displayLabel = "Users";
+			}
+		});
+		
+		//When Song radio button clicked
+		rdbtnSong.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				displayLabel = "Songs";
+			}
+		});
+		
+		//When ARTIST radio button clicked
+		rdbtnArtist.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				displayLabel = "Artists";
+			}
+		});
+		
+		//When ALBUM radio button clicked
+		rdbtnAlbum.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				displayLabel = "Albums";
+			}
+		});
+		
+		
+		//********************************************************************
+		
+		//When SEARCH is clicked
+		btnSearch.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				//Display the changed display label
+				lblSongs.setText(displayLabel);
+				
+				//Display query***********************
+				
+				//USERS
+				if(displayLabel.equals("Songs")) {
+					CallableStatement myCallStmt;
+					try {
+						myCallStmt = (CallableStatement) connection.prepareCall("{call searchSongs(?)}");
+						myCallStmt.setString(1, "%"+searchText.getText().trim()+"%");
+						myCallStmt.execute();
+						ResultSet rs = myCallStmt.getResultSet();
+						
+						while(rs.next()) {
+							model.addElement(rs.getString("title")+", "+rs.getString("artistName"));
+						}
+					} catch (SQLException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+				
+				
+				
+				//SONGS
+				
+				//ARTISTS
+				
+				//ALBUMS
+				
+				//************************************
+			}
+		});
+		
+		
 		//********************************************************************
 	}
 
