@@ -33,7 +33,7 @@ public class Login extends JFrame {
 	public Login(Connection connection) {
 		
 		// Set title and size
-		setTitle("Million Song Database Application");
+		setTitle("Song Database Application");
 		setSize(1920, 1080);
 		setBackground(new Color(135, 206, 250));//Doesn't work for some reason
 		

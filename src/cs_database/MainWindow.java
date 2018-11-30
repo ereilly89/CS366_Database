@@ -17,6 +17,9 @@ import javax.swing.JScrollPane;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -30,6 +33,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.RowSpec;
 import com.mysql.jdbc.CallableStatement;
+import com.mysql.jdbc.PreparedStatement;
 
 import net.miginfocom.swing.MigLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -54,26 +58,33 @@ public class MainWindow {
 	private JRadioButton rdbtnAlbum;
 	private JTextArea searchText;
 	private String username;//stores the current user of the application
+	private int userID;
 	private Connection connection;//stores the connection to mysql
 	private String displayLabel;//label for displaying search results
 	private DefaultListModel searchModel; //model for using JList object for search
 	private DefaultListModel playlistModel; //model for using JList object for playlist
 	private DefaultListModel followModel; //model for using JList object for user following
+	CallableStatement myCallStmt;  //for query execution
+	String sql; //for insertion of tuples
 	/**
 	 * Create the application.
+	 * @throws SQLException 
 	 */
 	
-	public MainWindow(String theUser, Connection connection) {
+	public MainWindow(String theUser, Connection connection) throws SQLException {
 		username = theUser;
 		this.connection = connection;
+		userID = getUserID(username);
 		initialize();
 		this.frmDatabase.setVisible(true);
+		
 	}
 
 	/**
 	 * Initialize the contents of the frame.
+	 * @throws SQLException 
 	 */
-	private void initialize() {
+	private void initialize() throws SQLException {
 		
 		frmDatabase = new JFrame();
 		frmDatabase.getContentPane().setBackground(new Color(135, 206, 250));
@@ -196,10 +207,40 @@ public class MainWindow {
 		JMenuBar menuBar = new JMenuBar();
 		frmDatabase.setJMenuBar(menuBar);
 		
-		JMenu menuFile = new JMenu("File");
-		menuBar.add(menuFile);
+		//********Fetch and display preexisting playlists, and users the current user follows
+		
+		ResultSet rs;
+		
+		//Initialize Follows List
+		
+		myCallStmt = (CallableStatement) connection.prepareCall("{call displayFollows(?)}");
+		myCallStmt.setInt(1, userID);
+		myCallStmt.execute();
+		rs = myCallStmt.getResultSet();
+		
+		while(rs.next()) {
+			System.out.println("user added?");
+			followModel.addElement(getUsername(rs.getInt(2)));
+		}
+		
+		//Initialize Playlist List
+		
+		myCallStmt = (CallableStatement) connection.prepareCall("{call displayPlaylists(?)}");
+		myCallStmt.setInt(1, userID);
+		myCallStmt.execute();
+		rs = myCallStmt.getResultSet();
+		
+		while(rs.next()) {
+			System.out.println("playlist added?");
+			playlistModel.addElement(rs.getString(1));
+		}
+		
+		
 		
 		//*********************************FILE MENU**************************************//
+		
+		JMenu menuFile = new JMenu("File");
+		menuBar.add(menuFile);
 		
 		//Create Login/Logout option
 		JMenuItem mntmLogin = new JMenuItem("Login/Logout "+username);
@@ -221,6 +262,7 @@ public class MainWindow {
 				System.exit(0);
 			}
 		});
+		
 		//********************************************************************
 		
 		//When USER radio button clicked
@@ -266,7 +308,7 @@ public class MainWindow {
 				//USERS
 				
 				if(displayLabel.equals("Users")) {
-					CallableStatement myCallStmt;
+					
 					try {
 						myCallStmt = (CallableStatement) connection.prepareCall("{call searchUsers(?)}");
 						myCallStmt.setString(1, "%"+searchText.getText().trim()+"%");
@@ -349,10 +391,91 @@ public class MainWindow {
 			}
 		});
 		
+		//**Follow User Functionality*************************************//
 		
+		MouseListener mouseListener = new MouseAdapter() {
+		    public void mouseClicked(MouseEvent e) {
+		    	try {
+		    		if (e.getClickCount() == 2 && displayLabel.equals("Users")) {
+				           String selectedItem = (String)  songsList.getSelectedValue();
+				           
+				           if(!selectedItem.equals(username)) {
+				        	   System.out.println("selectedItem: "+selectedItem+", username: "+username);
+				        	// add user to followed if they aren't already followed and add to the database
+					           boolean isFollowing = false;
+					           
+								try {
+									ResultSet rs;
+								    
+									int followedUserID = getUserID(selectedItem);
+									
+									//Find out if the current user is already following the selected user
+									myCallStmt = (CallableStatement) connection.prepareCall("{call isFollowing(?,?)}");
+									myCallStmt.setInt(1, userID);
+									myCallStmt.setInt(2, followedUserID);
+									myCallStmt.execute();
+									rs = myCallStmt.getResultSet();
+									
+									System.out.println("test");
+									
+									while(!rs.next()) { //User hasn't already been followed so let them follow
+										DefaultListModel model = (DefaultListModel) followedList.getModel();
+								           if(model == null)
+								           {
+								                 model = new DefaultListModel();
+								                 followedList.setModel(model);
+								           }
+								           model.addElement(selectedItem);
+								          
+								           sql = "INSERT INTO follow (user_ID,userID)"+"VALUES (?,?)";
+										   PreparedStatement preparedStatement = (PreparedStatement) connection.prepareStatement(sql);
+										   preparedStatement.setInt(1, userID);
+										   preparedStatement.setInt(2, followedUserID);
+										   preparedStatement.executeUpdate();
+										   System.out.println("User added");
+										   break;
+									}
+								
+								} catch (SQLException e1) {
+									// TODO Auto-generated catch block
+									e1.printStackTrace();
+								}
+				           }
+				         }
+		    	}catch (Exception ex) {
+		    		System.out.println("no selection made.");
+		    	}
+		        
+		    }
+		};
+		songsList.addMouseListener(mouseListener);
 		//********************************************************************
 	}
-
+	
+	public int getUserID(String user) throws SQLException {
+		CallableStatement myCallStmt = (CallableStatement) connection.prepareCall("{call getUserID(?)}");
+		myCallStmt.setString(1, user);
+		myCallStmt.execute();
+		ResultSet rs = myCallStmt.getResultSet();
+		int thisUserID = -1;
+		if(rs.next()) {
+			thisUserID = rs.getInt(1);
+		}
+		return thisUserID;
+	}
+	
+	public String getUsername(int userID) throws SQLException {
+		CallableStatement myCallStmt = (CallableStatement) connection.prepareCall("{call getUsername(?)}");
+		myCallStmt.setInt(1, userID);
+		myCallStmt.execute();
+		ResultSet rs = myCallStmt.getResultSet();
+		String thisUsername = "";
+		if(rs.next()) {
+			thisUsername = rs.getString(1);
+		}
+		return thisUsername;
+	}
+	
 	public JRadioButton getRdbtnUser() {
 		return rdbtnUser;
 	}
