@@ -556,8 +556,11 @@ public class MainWindow {
 		    			int row = followedList.locationToIndex(e.getPoint());
 		    			followedList.setSelectedIndex(row);
 		    			
-		    			//Show the delete menu
-		    			deleteMenu.show(e.getComponent(), e.getX(), e.getY());
+		    			//Display delete menu only if there are currently followed users
+		    			if(!followedList.isSelectionEmpty()) {
+		    				//Show the delete menu
+			    			deleteMenu.show(e.getComponent(), e.getX(), e.getY());
+		    			}
 				    }
 		    	}catch (Exception ex) {
 		    		System.out.println("no selection made.");
