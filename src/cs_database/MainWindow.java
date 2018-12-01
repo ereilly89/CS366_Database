@@ -135,6 +135,7 @@ public class MainWindow {
 		rdbtnSong.setContentAreaFilled(false);
 		rdbtnSong.setBackground(new Color(135, 206, 250));
 		rdbtnSong.setSelected(true);
+		displayLabel = "Songs";
 		
 		rdbtnArtist = new JRadioButton("Artist");
 		buttonGroup.add(rdbtnArtist);
@@ -419,26 +420,35 @@ public class MainWindow {
 		};
 		songsList.addMouseListener(mouseListener);
 		
-		//***************Create Playlist Button*****************************************************
+		//***************Create Playlist*****************************************************
+		
+		final JPopupMenu createPlaylistMenu = new JPopupMenu();
+		JMenuItem createPlaylistOption = new JMenuItem("Create New Playlist");
 		
 		MouseListener playlistListener = new MouseAdapter() {
-		    public void mouseClicked(MouseEvent e) {
-		    	try {
-		    		if (e.getClickCount() == 2 && playlistList.getSelectedValue().equals("(Create Playlist)")) {
-		    			System.out.println("Created playlist...");
-				    }
-		    	}catch (Exception ex) {
-		    		System.out.println("no selection made.");
-		    	}
-		        
-		    }
+			public void mouseClicked(MouseEvent e) {
+				if (SwingUtilities.isRightMouseButton(e)) {//if right clicked
+	    			//Show the delete menu
+	    			createPlaylistMenu.show(e.getComponent(), e.getX(), e.getY());
+			    }
+			}
 		};
+		
+		MouseListener createPlaylistListener = new MouseAdapter(){
+			public void mousePressed(MouseEvent e) {
+				System.out.println("Create Playlist.");
+			}
+		};
+		
+		createPlaylistOption.addMouseListener(createPlaylistListener);
+		createPlaylistMenu.add(createPlaylistOption);
+		
 		playlistList.addMouseListener(playlistListener);
 		
 		//*************Right click followed user option (to delete)*****************************************************************************
 		
 		final JPopupMenu deleteMenu = new JPopupMenu();
-		JMenuItem item = new JMenuItem("Delete");
+		JMenuItem deleteOption = new JMenuItem("Delete");
 		
 		MouseListener deleteClick = new MouseAdapter() {
 			public void mousePressed(MouseEvent e) {//Delete the selected user from current user's friend's list
@@ -483,8 +493,8 @@ public class MainWindow {
 		    }
 		};
 		
-		item.addMouseListener(deleteClick);
-		deleteMenu.add(item);
+		deleteOption.addMouseListener(deleteClick);
+		deleteMenu.add(deleteOption);
 		
 		followedList.addMouseListener(followedListener);
 		
@@ -512,9 +522,6 @@ public class MainWindow {
 		
 		//Clear Preexisting contents
 		playlistModel.clear();
-		
-		//Add create playlist option
-		playlistModel.add(0,"(Create Playlist)");
 		
 		//Update Playlist List
 		myCallStmt = (CallableStatement) connection.prepareCall("{call displayPlaylists(?)}");
