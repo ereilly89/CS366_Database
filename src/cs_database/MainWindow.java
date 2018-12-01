@@ -347,7 +347,7 @@ public class MainWindow {
 						
 						searchModel.clear();
 						while(rs.next()) {
-							searchModel.addElement(rs.getString("albumName")+"\t"+rs.getString("artistName"));
+							searchModel.addElement(rs.getString("albumName"));
 						}
 					} catch (SQLException e1) {
 						// TODO Auto-generated catch block
@@ -367,7 +367,7 @@ public class MainWindow {
 		    public void mouseClicked(MouseEvent e) {
 		    	try {
 		    		//If user is double clicked
-		    		if (e.getClickCount() == 2 && displayLabel.equals("Users")) {
+		    		if (e.getClickCount() == 2 && lblSongs.getText().equals("Users")) {
 				           String selectedItem = (String)  songsList.getSelectedValue();
 				           
 				           if(!selectedItem.equals(username)) {
@@ -413,11 +413,9 @@ public class MainWindow {
 								}
 				           }
 		    		}
-		    		}catch (Exception ex) {
-			    		System.out.println("no selection made.");
-			    	}
+		    		
 				         //If song is double clicked
-				         if(e.getClickCount() == 2 && displayLabel.equals("Songs")) {
+				         if(e.getClickCount() == 2 && lblSongs.getText().equals("Songs")) {
 				        	 
 				        	 //If playlist is selected, add the song to the playlist
 				        	 if(!playlistList.isSelectionEmpty()) {
@@ -439,20 +437,37 @@ public class MainWindow {
 				        	 }
 				        	 
 				         //If artist is double clicked
-				         }else if(e.getClickCount() == 2 && displayLabel.equals("Artists")) {
+				         }else if(e.getClickCount() == 2 && lblSongs.getText().equals("Artists")) {
 				        	 
 				        	 //Display the clicked artist's songs
-				        	 
+				        	 System.out.println("An artist was clicked.");
+				        	 try {
+				        		lblSongs.setText("Songs");
+								displayArtistsSongs(getArtistID((String) songsList.getSelectedValue()));
+							} catch (SQLException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
 				        	 
 				         //If album is double clicked	 
-				         }else if(e.getClickCount() == 2 && displayLabel.equals("Albums")) {
+				         }else if(e.getClickCount() == 2 && lblSongs.getText().equals("Albums")) {
 				        	 
 				        	 //Display the clicked album's songs
-				        	 
+				        	 System.out.println("An album was clicked.");
+				        	 try {
+				        		lblSongs.setText("Songs");
+								displayAlbumsSongs(getAlbumID((String)songsList.getSelectedValue()));
+								System.out.println(songsList.getSelectedValue());
+								System.out.println("AlbumID: "+getAlbumID((String) songsList.getSelectedValue()));
+							} catch (SQLException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
 				        	 
 				         }
-		    	
-		        
+		    	}catch (Exception ex) {
+		    		System.out.println("no selection made.");
+		    	}
 		    }
 		};
 		songsList.addMouseListener(mouseListener);
@@ -626,6 +641,28 @@ public class MainWindow {
 	
 	//********************************************************************************************************//
 	
+	public void displayArtistsSongs(String artist) throws SQLException {
+		myCallStmt = (CallableStatement) connection.prepareCall("{call displayArtistsSongs(?)}");
+		myCallStmt.setString(1, artist);
+		myCallStmt.execute();
+		ResultSet rs = myCallStmt.getResultSet();
+		searchModel.clear();
+		while(rs.next()) {
+			searchModel.addElement(rs.getString("title"));
+		}
+	}
+	
+	public void displayAlbumsSongs(int albumID) throws SQLException {
+		myCallStmt = (CallableStatement) connection.prepareCall("{call displayAlbumsSongs(?)}");
+		myCallStmt.setInt(1, albumID);
+		myCallStmt.execute();
+		ResultSet rs = myCallStmt.getResultSet();
+		searchModel.clear();
+		while(rs.next()) {
+			searchModel.addElement(rs.getString("title"));
+		}
+	}
+	
 	public void displayPlaylistSongs(int playlistID) throws SQLException {
 		myCallStmt = (CallableStatement) connection.prepareCall("{call displayPlaylistSongs(?)}");
 		myCallStmt.setInt(1, playlistID);
@@ -635,6 +672,32 @@ public class MainWindow {
 		while(rs.next()) {
 			searchModel.addElement(rs.getString("title"));
 		}
+	}
+	
+	public String getArtistID(String artistName) throws SQLException {
+		CallableStatement myCallStmt = (CallableStatement) connection.prepareCall("{call getArtistID(?)}");
+		myCallStmt.setString(1, artistName);
+		myCallStmt.execute();
+		ResultSet rs = myCallStmt.getResultSet();
+		String artistID = "";
+		while(rs.next()) {
+			artistID = rs.getString(1);
+			break;
+		}
+		return artistID;
+	}
+	
+	public int getAlbumID(String albumName) throws SQLException {
+		CallableStatement myCallStmt = (CallableStatement) connection.prepareCall("{call getAlbumID(?)}");
+		myCallStmt.setString(1, albumName);
+		myCallStmt.execute();
+		ResultSet rs = myCallStmt.getResultSet();
+		int albumID = -1;
+		while(rs.next()) {
+			albumID = rs.getInt(1);
+			break;
+		}
+		return albumID;
 	}
 	
 	public String getSongID(String song) throws SQLException{
