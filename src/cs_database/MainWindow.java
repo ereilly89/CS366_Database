@@ -1,18 +1,9 @@
 package cs_database;
 import java.awt.EventQueue;
 
-import javax.swing.JFrame;
-import java.awt.Color;
-import javax.swing.JTextField;
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import javax.swing.JToolBar;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.JPanel;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
+import javax.swing.*;
+import java.awt.*;
+import java.sql.*;
 
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
@@ -20,10 +11,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -38,6 +25,7 @@ import com.mysql.jdbc.PreparedStatement;
 import net.miginfocom.swing.MigLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.JMenuBar;
 import javax.swing.JProgressBar;
@@ -212,30 +200,10 @@ public class MainWindow {
 		ResultSet rs;
 		
 		//Initialize Follows List
-		
-		myCallStmt = (CallableStatement) connection.prepareCall("{call displayFollows(?)}");
-		myCallStmt.setInt(1, userID);
-		myCallStmt.execute();
-		rs = myCallStmt.getResultSet();
-		
-		while(rs.next()) {
-			System.out.println("user added?");
-			followModel.addElement(getUsername(rs.getInt(2)));
-		}
+		updateFollowed();
 		
 		//Initialize Playlist List
-		
-		myCallStmt = (CallableStatement) connection.prepareCall("{call displayPlaylists(?)}");
-		myCallStmt.setInt(1, userID);
-		myCallStmt.execute();
-		rs = myCallStmt.getResultSet();
-		
-		while(rs.next()) {
-			System.out.println("playlist added?");
-			playlistModel.addElement(rs.getString(1));
-		}
-		
-		
+		updatePlaylists();
 		
 		//*********************************FILE MENU**************************************//
 		
@@ -391,7 +359,7 @@ public class MainWindow {
 			}
 		});
 		
-		//**Follow User Functionality*************************************//
+		//**Follow User when user clicked****************************************************//
 		
 		MouseListener mouseListener = new MouseAdapter() {
 		    public void mouseClicked(MouseEvent e) {
@@ -449,7 +417,110 @@ public class MainWindow {
 		    }
 		};
 		songsList.addMouseListener(mouseListener);
-		//********************************************************************
+		
+		//***************Create Playlist Button*****************************************************
+		
+		MouseListener playlistListener = new MouseAdapter() {
+		    public void mouseClicked(MouseEvent e) {
+		    	try {
+		    		if (e.getClickCount() == 2 && playlistList.getSelectedValue().equals("(Create Playlist)")) {
+		    			System.out.println("Created playlist...");
+				    }
+		    	}catch (Exception ex) {
+		    		System.out.println("no selection made.");
+		    	}
+		        
+		    }
+		};
+		playlistList.addMouseListener(playlistListener);
+		
+		//*************Right click followed user option (to delete)*****************************************************************************
+		
+		final JPopupMenu deleteMenu = new JPopupMenu();
+		JMenuItem item = new JMenuItem("Delete");
+		
+		MouseListener deleteClick = new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {//Delete the selected user from current user's friend's list
+				System.out.println("Delete click event fired.");
+				try {
+					
+					//Delete the user from the database
+					int followedUser = getUserID((String) followedList.getSelectedValue());
+					sql = "DELETE FROM `cs366-2187_reillyem11`.`follow` WHERE (`user_ID` = '"+userID+"') and (`userID` = '"+followedUser+"');";
+					PreparedStatement preparedStatement = (PreparedStatement) connection.prepareStatement(sql);
+					preparedStatement.executeUpdate();
+					  
+					//Delete the user from the GUI
+					updateFollowed();
+					System.out.println("Deleted user's ID: "+followedUser);
+					
+					
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		};
+		
+		MouseListener followedListener = new MouseAdapter() {
+		    public void mouseClicked(MouseEvent e) {
+		    	try {
+		    		if (SwingUtilities.isRightMouseButton(e)) {//if right clicked
+		    			
+		    			//get the pointer and select the list item 
+		    			int row = followedList.locationToIndex(e.getPoint());
+		    			followedList.setSelectedIndex(row);
+		    			
+		    			//Show the delete menu
+		    			deleteMenu.show(e.getComponent(), e.getX(), e.getY());
+				    }
+		    	}catch (Exception ex) {
+		    		System.out.println("no selection made.");
+		    	}
+		        
+		    }
+		};
+		
+		item.addMouseListener(deleteClick);
+		deleteMenu.add(item);
+		
+		followedList.addMouseListener(followedListener);
+		
+		//******************************************************************************************
+	}
+	
+	public void updateFollowed() throws SQLException {
+		
+		//Clear Preexisting contents
+		followModel.clear();
+	
+		//Update Follows List
+		myCallStmt = (CallableStatement) connection.prepareCall("{call displayFollows(?)}");
+		myCallStmt.setInt(1, userID);
+		myCallStmt.execute();
+		ResultSet rs = myCallStmt.getResultSet();
+		
+		while(rs.next()) {
+			System.out.println("user added?");
+			followModel.addElement(getUsername(rs.getInt(2)));
+		}
+	}
+	
+	public void updatePlaylists() throws SQLException {
+		
+		//Clear Preexisting contents
+		playlistModel.clear();
+		
+		//Update Playlist List
+		myCallStmt = (CallableStatement) connection.prepareCall("{call displayPlaylists(?)}");
+		myCallStmt.setInt(1, userID);
+		myCallStmt.execute();
+		ResultSet rs = myCallStmt.getResultSet();
+		
+		while(rs.next()) {
+			System.out.println("playlist added?");
+			playlistModel.addElement(rs.getString(1));
+		}
 	}
 	
 	public int getUserID(String user) throws SQLException {
