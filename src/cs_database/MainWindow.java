@@ -428,15 +428,50 @@ public class MainWindow {
 		MouseListener playlistListener = new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				if (SwingUtilities.isRightMouseButton(e)) {//if right clicked
-	    			//Show the delete menu
+	    			//Show the playlist menu
 	    			createPlaylistMenu.show(e.getComponent(), e.getX(), e.getY());
 			    }
 			}
 		};
 		
+		//Triggers when user clicks "Create New Playlist" option
 		MouseListener createPlaylistListener = new MouseAdapter(){
 			public void mousePressed(MouseEvent e) {
-				System.out.println("Create Playlist.");
+				boolean isValid = false;
+				String displayText = "Playlist Name";
+				
+				while(isValid==false) {
+					isValid = true;
+					
+					//Ask user for name of the new playlist and display it to the playlist area
+					try {
+						String newPlaylistName = JOptionPane.showInputDialog(displayText);
+					
+						if(!newPlaylistName.equals("")) {
+							playlistModel.addElement(newPlaylistName);
+							
+							//Add new playlist to database
+							sql = "INSERT INTO playlist (playlist_ID,playlistName,userID)"+"VALUES (?,?,?)";
+							   PreparedStatement preparedStatement = (PreparedStatement) connection.prepareStatement(sql);
+							   preparedStatement.setString(1, null);
+							   preparedStatement.setString(2, newPlaylistName);
+							   preparedStatement.setInt(3, userID);
+							   preparedStatement.executeUpdate();
+							   System.out.println("User added");
+							   
+						}else {
+							isValid = false;
+							displayText = "Playlist Name (Can't be empty)";
+						}
+					}catch (NullPointerException ne){
+						System.out.println("Playlist creation cancelled.");
+					} catch (SQLException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					
+					
+				}
 			}
 		};
 		
