@@ -366,6 +366,7 @@ public class MainWindow {
 		MouseListener mouseListener = new MouseAdapter() {
 		    public void mouseClicked(MouseEvent e) {
 		    	try {
+		    		//If user is double clicked
 		    		if (e.getClickCount() == 2 && displayLabel.equals("Users")) {
 				           String selectedItem = (String)  songsList.getSelectedValue();
 				           
@@ -411,6 +412,26 @@ public class MainWindow {
 									e1.printStackTrace();
 								}
 				           }
+				           
+				         //If song is double clicked
+				         }else if(e.getClickCount() == 2 && displayLabel.equals("Songs")) {
+				        	 
+				        	 //If playlist is selected, add the song to the playlist
+				        	 
+				        	 
+				        	 
+				         //If artist is double clicked
+				         }else if(e.getClickCount() == 2 && displayLabel.equals("Artists")) {
+				        	 
+				        	 //Display the clicked artist's songs
+				        	 
+				        	 
+				         //If album is double clicked	 
+				         }else if(e.getClickCount() == 2 && displayLabel.equals("Albums")) {
+				        	 
+				        	 //Display the clicked album's songs
+				        	 
+				        	 
 				         }
 		    	}catch (Exception ex) {
 		    		System.out.println("no selection made.");
