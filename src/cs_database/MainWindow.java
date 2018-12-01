@@ -105,7 +105,7 @@ public class MainWindow {
 		JScrollPane playlistScrollPane;
 		playlistScrollPane = new JScrollPane(playlistList, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER); //
 		playlistPanel.add(playlistScrollPane, "1, 4, 2, 1, fill, fill"); //
-		playlistModel.add(0,"(Create Playlist)");
+		
 		
 		JPanel searchPanel = new JPanel();
 		searchPanel.setBackground(new Color(135, 206, 250));
@@ -134,6 +134,7 @@ public class MainWindow {
 		searchPanel.add(rdbtnSong, "cell 2 2,alignx left,aligny top");
 		rdbtnSong.setContentAreaFilled(false);
 		rdbtnSong.setBackground(new Color(135, 206, 250));
+		rdbtnSong.setSelected(true);
 		
 		rdbtnArtist = new JRadioButton("Artist");
 		buttonGroup.add(rdbtnArtist);
@@ -267,7 +268,7 @@ public class MainWindow {
 		//When SEARCH is clicked
 		btnSearch.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				
+			
 				//Display the changed display label
 				lblSongs.setText(displayLabel);
 				
@@ -451,7 +452,8 @@ public class MainWindow {
 					preparedStatement.executeUpdate();
 					  
 					//Delete the user from the GUI
-					updateFollowed();
+					followModel.remove(followedList.getSelectedIndex());
+					
 					System.out.println("Deleted user's ID: "+followedUser);
 					
 					
@@ -510,6 +512,9 @@ public class MainWindow {
 		
 		//Clear Preexisting contents
 		playlistModel.clear();
+		
+		//Add create playlist option
+		playlistModel.add(0,"(Create Playlist)");
 		
 		//Update Playlist List
 		myCallStmt = (CallableStatement) connection.prepareCall("{call displayPlaylists(?)}");
