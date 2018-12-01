@@ -110,7 +110,7 @@ public class Login extends JFrame {
 						//ADD USER TO DATABASE*********
 						sql = "INSERT INTO user (user_ID,username,password1)"+"VALUES (?,?,?)";
 						PreparedStatement preparedStatement = (PreparedStatement) connection.prepareStatement(sql);
-						preparedStatement.setInt(1, numUsers+1);
+						preparedStatement.setString(1, null);//if null messes things up, change back to numUsers+1
 						preparedStatement.setString(2, username);
 						preparedStatement.setString(3, password);
 						preparedStatement.executeUpdate();

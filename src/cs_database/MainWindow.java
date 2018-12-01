@@ -422,14 +422,27 @@ public class MainWindow {
 		
 		//***************Create Playlist*****************************************************
 		
-		final JPopupMenu createPlaylistMenu = new JPopupMenu();
+		final JPopupMenu playlistMenu = new JPopupMenu();
 		JMenuItem createPlaylistOption = new JMenuItem("Create New Playlist");
+		JMenuItem deletePlaylistOption = new JMenuItem("Delete");
 		
 		MouseListener playlistListener = new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				if (SwingUtilities.isRightMouseButton(e)) {//if right clicked
+					//get the pointer and select the list item 
+	    			int row = playlistList.locationToIndex(e.getPoint());
+	    			playlistList.setSelectedIndex(row);
+	    			
+	    			if(playlistList.isSelectionEmpty()) {
+	    				//Hide the delete option
+	    				playlistMenu.remove(deletePlaylistOption);
+	    			}else {
+	    				if(playlistMenu.getComponents().length==1){//if "Create New Playlist" is the only option, add the delete option back
+	    					playlistMenu.add(deletePlaylistOption);
+	    				}
+	    			}
 	    			//Show the playlist menu
-	    			createPlaylistMenu.show(e.getComponent(), e.getX(), e.getY());
+	    			playlistMenu.show(e.getComponent(), e.getX(), e.getY());
 			    }
 			}
 		};
@@ -440,43 +453,70 @@ public class MainWindow {
 				boolean isValid = false;
 				String displayText = "Playlist Name";
 				
-				while(isValid==false) {
+				while(isValid==false) {//Ask user for new playlist name, repeate until valid or user cancels
 					isValid = true;
 					
-					//Ask user for name of the new playlist and display it to the playlist area
 					try {
 						String newPlaylistName = JOptionPane.showInputDialog(displayText);
 					
-						if(!newPlaylistName.equals("")) {
-							playlistModel.addElement(newPlaylistName);
-							
-							//Add new playlist to database
-							sql = "INSERT INTO playlist (playlist_ID,playlistName,userID)"+"VALUES (?,?,?)";
-							   PreparedStatement preparedStatement = (PreparedStatement) connection.prepareStatement(sql);
-							   preparedStatement.setString(1, null);
-							   preparedStatement.setString(2, newPlaylistName);
-							   preparedStatement.setInt(3, userID);
-							   preparedStatement.executeUpdate();
-							   System.out.println("User added");
-							   
+						if(!newPlaylistName.equals("")) {//make sure playlist name isn't empty
+							if(!playlistModel.contains(newPlaylistName)) {//make sure playlist name isn't a duplicate
+								
+								//Add new playlist to the GUI
+								playlistModel.addElement(newPlaylistName);
+								
+								//Add new playlist to database
+								sql = "INSERT INTO playlist (playlist_ID,playlistName,userID)"+"VALUES (?,?,?)";
+								PreparedStatement preparedStatement = (PreparedStatement) connection.prepareStatement(sql);
+								preparedStatement.setString(1, null);
+							    preparedStatement.setString(2, newPlaylistName);
+								preparedStatement.setInt(3, userID);
+								preparedStatement.executeUpdate();
+								System.out.println("User added");
+							}else {
+								isValid = false;
+								displayText = "Playlist Name (Playlist name already exists)";
+							}
 						}else {
 							isValid = false;
 							displayText = "Playlist Name (Can't be empty)";
 						}
+						
 					}catch (NullPointerException ne){
 						System.out.println("Playlist creation cancelled.");
 					} catch (SQLException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
-					
-					
 				}
 			}
 		};
 		
+		MouseListener deletePlaylistListener = new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				//Delete the user from the database
+				try {
+					int playlistID = getPlaylistID((String) playlistList.getSelectedValue());
+					sql = "DELETE FROM `cs366-2187_reillyem11`.`playlist` WHERE (`playlist_ID` = '"+playlistID+"');";
+					PreparedStatement preparedStatement = (PreparedStatement) connection.prepareStatement(sql);
+					preparedStatement.executeUpdate();
+					System.out.println("playlistID: "+playlistID);
+					
+					//Remove the playlist from the GUI
+					playlistModel.remove(playlistList.getSelectedIndex());
+					
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				//***
+			}
+		};
+		
 		createPlaylistOption.addMouseListener(createPlaylistListener);
-		createPlaylistMenu.add(createPlaylistOption);
+		deletePlaylistOption.addMouseListener(deletePlaylistListener);
+		playlistMenu.add(createPlaylistOption);
+		playlistMenu.add(deletePlaylistOption);
 		
 		playlistList.addMouseListener(playlistListener);
 		
@@ -489,18 +529,16 @@ public class MainWindow {
 			public void mousePressed(MouseEvent e) {//Delete the selected user from current user's friend's list
 				System.out.println("Delete click event fired.");
 				try {
-					
 					//Delete the user from the database
 					int followedUser = getUserID((String) followedList.getSelectedValue());
 					sql = "DELETE FROM `cs366-2187_reillyem11`.`follow` WHERE (`user_ID` = '"+userID+"') and (`userID` = '"+followedUser+"');";
 					PreparedStatement preparedStatement = (PreparedStatement) connection.prepareStatement(sql);
 					preparedStatement.executeUpdate();
 					  
-					//Delete the user from the GUI
-					followModel.remove(followedList.getSelectedIndex());
-					
 					System.out.println("Deleted user's ID: "+followedUser);
 					
+					//Delete the user from the GUI
+					followModel.remove(followedList.getSelectedIndex());
 					
 				} catch (SQLException e1) {
 					// TODO Auto-generated catch block
@@ -534,6 +572,22 @@ public class MainWindow {
 		followedList.addMouseListener(followedListener);
 		
 		//******************************************************************************************
+	}
+	
+	public int getPlaylistID(String playlistName) throws SQLException {
+		
+		CallableStatement myCallStmt = (CallableStatement) connection.prepareCall("{call getPlaylistID(?,?)}");
+		myCallStmt.setInt(1, userID);
+		myCallStmt.setString(2, playlistName);
+		myCallStmt.execute();
+		ResultSet rs = myCallStmt.getResultSet();
+		int playlistID = -1;
+		System.out.println("user: "+userID+", playlist: "+playlistName);
+		while(rs.next()) {
+			playlistID = rs.getInt(1);
+			break;
+		}
+		return playlistID;
 	}
 	
 	public void updateFollowed() throws SQLException {
