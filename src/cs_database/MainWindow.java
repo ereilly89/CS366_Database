@@ -52,6 +52,7 @@ public class MainWindow {
 	private DefaultListModel searchModel; //model for using JList object for search
 	private DefaultListModel playlistModel; //model for using JList object for playlist
 	private DefaultListModel followModel; //model for using JList object for user following
+	String lastPlaylistClicked;
 	CallableStatement myCallStmt;  //for query execution
 	String sql; //for insertion of tuples
 	/**
@@ -361,13 +362,17 @@ public class MainWindow {
 			}
 		});
 		
-		//**Follow User when user clicked****************************************************//
+		//**Main List Events****************************************************//
 		
+		//create delete menu for playlist edit
+    	final JPopupMenu deleteFromPlaylistMenu = new JPopupMenu();
+    	JMenuItem deleteSongOption = new JMenuItem("Delete");
+    	
 		MouseListener mouseListener = new MouseAdapter() {
 		    public void mouseClicked(MouseEvent e) {
 		    	try {
 		    		//If user is double clicked
-		    		if (e.getClickCount() == 2 && lblSongs.getText().equals("Users")) {
+		    		if (e.getClickCount() == 2 && lblSongs.getText().equals("Users")) { //Follow user when double clicked
 				           String selectedItem = (String)  songsList.getSelectedValue();
 				           
 				           if(!selectedItem.equals(username)) {
@@ -414,62 +419,96 @@ public class MainWindow {
 				           }
 		    		}
 		    		
-				         //If song is double clicked
-				         if(e.getClickCount() == 2 && lblSongs.getText().equals("Songs")) {
+				    //If song is double clicked
+				    if(e.getClickCount() == 2 && lblSongs.getText().equals("Songs")) {
 				        	 
-				        	 //If playlist is selected, add the song to the playlist
-				        	 if(!playlistList.isSelectionEmpty()) {
+				    	//If playlist is selected, add the song to the playlist
+				        if(!playlistList.isSelectionEmpty()) {
 				        		 
-				        		//Add song to the playlist
-				        		 try {
-				        			sql = "INSERT INTO include (playlist_ID,songID)"+"VALUES (?,?)";
-									PreparedStatement preparedStatement;
-									preparedStatement = (PreparedStatement) connection.prepareStatement(sql);
-									preparedStatement.setInt(1, getPlaylistID((String) playlistList.getSelectedValue()));
-								    preparedStatement.setString(2, getSongID((String) songsList.getSelectedValue()));
-								    preparedStatement.executeUpdate();
-								    System.out.println("Added to playlist.");
-				        		 }catch (Exception duplicateError){
-				        			 System.out.println("Cant add duplicate");
-				        		 }
-				        	 }else {
-				        		 System.out.println("Couldn't add song to playlist.");
-				        	 }
+				        	//Add song to the playlist
+				        	try {
+				        		sql = "INSERT INTO include (playlist_ID,songID)"+"VALUES (?,?)";
+								PreparedStatement preparedStatement;
+								preparedStatement = (PreparedStatement) connection.prepareStatement(sql);
+								preparedStatement.setInt(1, getPlaylistID((String) playlistList.getSelectedValue()));
+								preparedStatement.setString(2, getSongID((String) songsList.getSelectedValue()));
+								preparedStatement.executeUpdate();
+								System.out.println("Added to playlist.");
+				        	}catch (Exception duplicateError){
+				        		System.out.println("Cant add duplicate");
+				        	}
+				        }else {
+				        	System.out.println("Couldn't add song to playlist.");
+				        }
 				        	 
-				         //If artist is double clicked
-				         }else if(e.getClickCount() == 2 && lblSongs.getText().equals("Artists")) {
+				    //If artist is double clicked
+				    }else if(e.getClickCount() == 2 && lblSongs.getText().equals("Artists")) {
+				       	 
+				    	//Display the clicked artist's songs
+				        System.out.println("An artist was clicked.");
+				        try {
+				        	lblSongs.setText("Songs");
+							displayArtistsSongs(getArtistID((String) songsList.getSelectedValue()));
+						} catch (SQLException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
 				        	 
-				        	 //Display the clicked artist's songs
-				        	 System.out.println("An artist was clicked.");
-				        	 try {
-				        		lblSongs.setText("Songs");
-								displayArtistsSongs(getArtistID((String) songsList.getSelectedValue()));
-							} catch (SQLException e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
-							}
+				    //If album is double clicked	 
+				    }else if(e.getClickCount() == 2 && lblSongs.getText().equals("Albums")) {
 				        	 
-				         //If album is double clicked	 
-				         }else if(e.getClickCount() == 2 && lblSongs.getText().equals("Albums")) {
+				    	//Display the clicked album's songs
+				        System.out.println("An album was clicked.");
+				        try {
+				        	lblSongs.setText("Songs");
+							displayAlbumsSongs(getAlbumID((String)songsList.getSelectedValue()));
+							System.out.println(songsList.getSelectedValue());
+							System.out.println("AlbumID: "+getAlbumID((String) songsList.getSelectedValue()));
+						} catch (SQLException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
 				        	 
-				        	 //Display the clicked album's songs
-				        	 System.out.println("An album was clicked.");
-				        	 try {
-				        		lblSongs.setText("Songs");
-								displayAlbumsSongs(getAlbumID((String)songsList.getSelectedValue()));
-								System.out.println(songsList.getSelectedValue());
-								System.out.println("AlbumID: "+getAlbumID((String) songsList.getSelectedValue()));
-							} catch (SQLException e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
-							}
-				        	 
-				         }
+				    }
+				    if (SwingUtilities.isRightMouseButton(e) && !searchModel.isEmpty() && lblSongs.getText().equals(lastPlaylistClicked)) {
+				        
+				    	//get the pointer and select the list item 
+		    			int row = songsList.locationToIndex(e.getPoint());
+		    			songsList.setSelectedIndex(row);
+		    			
+		    			//display delete menu
+		    			deleteFromPlaylistMenu.show(e.getComponent(), e.getX(), e.getY());
+				    }
 		    	}catch (Exception ex) {
 		    		System.out.println("no selection made.");
 		    	}
 		    }
 		};
+		
+		MouseListener deleteFromPlaylistListener = new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				try {
+					//Delete song from database
+					int playlistID = getPlaylistID(lblSongs.getText());
+					String songID= getSongID((String) songsList.getSelectedValue());
+					sql = "DELETE FROM `cs366-2187_reillyem11`.`include` WHERE (`playlist_ID` = '"+playlistID+"') and (`songID` = '"+songID+"');";
+					PreparedStatement preparedStatement = (PreparedStatement) connection.prepareStatement(sql);
+					preparedStatement.executeUpdate();
+					
+					//Delete song from GUI
+					searchModel.remove(songsList.getSelectedIndex());
+					System.out.println("Song Deleted.");
+					
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		};
+    	
+		deleteSongOption.addMouseListener(deleteFromPlaylistListener);
+		deleteFromPlaylistMenu.add(deleteSongOption);
+		
 		songsList.addMouseListener(mouseListener);
 		
 		//***************Playlist*****************************************************
@@ -499,6 +538,7 @@ public class MainWindow {
 				
 				if( e.getClickCount() == 2) {
 					try {
+						lastPlaylistClicked = (String) playlistList.getSelectedValue();
 						lblSongs.setText((String) playlistList.getSelectedValue());
 						displayPlaylistSongs(getPlaylistID((String) playlistList.getSelectedValue()));
 					} catch (SQLException e1) {
