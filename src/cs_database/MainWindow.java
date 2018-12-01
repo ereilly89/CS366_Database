@@ -307,7 +307,7 @@ public class MainWindow {
 						
 						searchModel.clear();
 						while(rs.next()) {
-							searchModel.addElement(rs.getString("title")+"\t"+rs.getString("artistName"));
+							searchModel.addElement(rs.getString("title"));
 						}
 					} catch (SQLException e1) {
 						// TODO Auto-generated catch block
@@ -412,13 +412,31 @@ public class MainWindow {
 									e1.printStackTrace();
 								}
 				           }
-				           
+		    		}
+		    		}catch (Exception ex) {
+			    		System.out.println("no selection made.");
+			    	}
 				         //If song is double clicked
-				         }else if(e.getClickCount() == 2 && displayLabel.equals("Songs")) {
+				         if(e.getClickCount() == 2 && displayLabel.equals("Songs")) {
 				        	 
 				        	 //If playlist is selected, add the song to the playlist
-				        	 
-				        	 
+				        	 if(!playlistList.isSelectionEmpty()) {
+				        		 
+				        		//Add song to the playlist
+				        		 try {
+				        			sql = "INSERT INTO include (playlist_ID,songID)"+"VALUES (?,?)";
+									PreparedStatement preparedStatement;
+									preparedStatement = (PreparedStatement) connection.prepareStatement(sql);
+									preparedStatement.setInt(1, getPlaylistID((String) playlistList.getSelectedValue()));
+								    preparedStatement.setString(2, getSongID((String) songsList.getSelectedValue()));
+								    preparedStatement.executeUpdate();
+								    System.out.println("Added to playlist.");
+				        		 }catch (Exception duplicateError){
+				        			 System.out.println("Cant add duplicate");
+				        		 }
+				        	 }else {
+				        		 System.out.println("Couldn't add song to playlist.");
+				        	 }
 				        	 
 				         //If artist is double clicked
 				         }else if(e.getClickCount() == 2 && displayLabel.equals("Artists")) {
@@ -433,15 +451,13 @@ public class MainWindow {
 				        	 
 				        	 
 				         }
-		    	}catch (Exception ex) {
-		    		System.out.println("no selection made.");
-		    	}
+		    	
 		        
 		    }
 		};
 		songsList.addMouseListener(mouseListener);
 		
-		//***************Create Playlist*****************************************************
+		//***************Playlist*****************************************************
 		
 		final JPopupMenu playlistMenu = new JPopupMenu();
 		JMenuItem createPlaylistOption = new JMenuItem("Create New Playlist");
@@ -465,6 +481,16 @@ public class MainWindow {
 	    			//Show the playlist menu
 	    			playlistMenu.show(e.getComponent(), e.getX(), e.getY());
 			    }
+				
+				if( e.getClickCount() == 2) {
+					try {
+						lblSongs.setText((String) playlistList.getSelectedValue());
+						displayPlaylistSongs(getPlaylistID((String) playlistList.getSelectedValue()));
+					} catch (SQLException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
 			}
 		};
 		
@@ -493,7 +519,6 @@ public class MainWindow {
 							    preparedStatement.setString(2, newPlaylistName);
 								preparedStatement.setInt(3, userID);
 								preparedStatement.executeUpdate();
-								System.out.println("User added");
 							}else {
 								isValid = false;
 								displayText = "Playlist Name (Playlist name already exists)";
@@ -595,7 +620,35 @@ public class MainWindow {
 		
 		followedList.addMouseListener(followedListener);
 		
-		//******************************************************************************************
+	  //*********************************************************************************************************//
+	}
+	 //						METHODS													                           
+	
+	//********************************************************************************************************//
+	
+	public void displayPlaylistSongs(int playlistID) throws SQLException {
+		myCallStmt = (CallableStatement) connection.prepareCall("{call displayPlaylistSongs(?)}");
+		myCallStmt.setInt(1, playlistID);
+		myCallStmt.execute();
+		ResultSet rs = myCallStmt.getResultSet();
+		searchModel.clear();
+		while(rs.next()) {
+			searchModel.addElement(rs.getString("title"));
+		}
+	}
+	
+	public String getSongID(String song) throws SQLException{
+		CallableStatement myCallStmt = (CallableStatement) connection.prepareCall("{call getSongID(?)}");
+		myCallStmt.setString(1, song);
+		myCallStmt.execute();
+		ResultSet rs = myCallStmt.getResultSet();
+		String songID = "";
+		System.out.println("user: "+userID+", song: "+song);
+		while(rs.next()) {
+			songID = rs.getString(1);
+			break;
+		}
+		return songID;
 	}
 	
 	public int getPlaylistID(String playlistName) throws SQLException {
