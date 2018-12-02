@@ -430,7 +430,7 @@ public class MainWindow {
 				        		sql = "INSERT INTO include (playlist_ID,songID)"+"VALUES (?,?)";
 								PreparedStatement preparedStatement;
 								preparedStatement = (PreparedStatement) connection.prepareStatement(sql);
-								preparedStatement.setInt(1, getPlaylistID((String) playlistList.getSelectedValue()));
+								preparedStatement.setInt(1, getPlaylistID(userID, (String) playlistList.getSelectedValue()));
 								preparedStatement.setString(2, getSongID((String) songsList.getSelectedValue()));
 								preparedStatement.executeUpdate();
 								System.out.println("Added to playlist.");
@@ -469,7 +469,12 @@ public class MainWindow {
 							e1.printStackTrace();
 						}
 				        	 
+				    }else if(e.getClickCount() == 2 && lblSongs.getText().contains("Playlists")) {
+				    	lblSongs.setText("Songs");//***********************************************************
+				    	displayPlaylistSongs(getPlaylistID(getUserID((String) followedList.getSelectedValue()), (String)songsList.getSelectedValue()));
+				    	System.out.println("Display Songs from the playlist.");
 				    }
+				    
 				    if (SwingUtilities.isRightMouseButton(e) && !searchModel.isEmpty() && lblSongs.getText().equals(lastPlaylistClicked)) {
 				        
 				    	//get the pointer and select the list item 
@@ -489,7 +494,7 @@ public class MainWindow {
 			public void mousePressed(MouseEvent e) {
 				try {
 					//Delete song from database
-					int playlistID = getPlaylistID(lblSongs.getText());
+					int playlistID = getPlaylistID(userID, lblSongs.getText());
 					String songID= getSongID((String) songsList.getSelectedValue());
 					sql = "DELETE FROM `cs366-2187_reillyem11`.`include` WHERE (`playlist_ID` = '"+playlistID+"') and (`songID` = '"+songID+"');";
 					PreparedStatement preparedStatement = (PreparedStatement) connection.prepareStatement(sql);
@@ -516,6 +521,7 @@ public class MainWindow {
 		final JPopupMenu playlistMenu = new JPopupMenu();
 		JMenuItem createPlaylistOption = new JMenuItem("Create New Playlist");
 		JMenuItem deletePlaylistOption = new JMenuItem("Delete");
+		JMenuItem renamePlaylistOption = new JMenuItem("Rename");
 		
 		MouseListener playlistListener = new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
@@ -527,8 +533,10 @@ public class MainWindow {
 	    			if(playlistList.isSelectionEmpty()) {
 	    				//Hide the delete option
 	    				playlistMenu.remove(deletePlaylistOption);
+	    				playlistMenu.remove(renamePlaylistOption);
 	    			}else {
-	    				if(playlistMenu.getComponents().length==1){//if "Create New Playlist" is the only option, add the delete option back
+	    				if(playlistMenu.getComponents().length==1){//if "Create New Playlist" is the only option, add the delete option back and the rename option back
+	    					playlistMenu.add(renamePlaylistOption);
 	    					playlistMenu.add(deletePlaylistOption);
 	    				}
 	    			}
@@ -540,7 +548,7 @@ public class MainWindow {
 					try {
 						lastPlaylistClicked = (String) playlistList.getSelectedValue();
 						lblSongs.setText((String) playlistList.getSelectedValue());
-						displayPlaylistSongs(getPlaylistID((String) playlistList.getSelectedValue()));
+						displayPlaylistSongs(getPlaylistID(userID, (String) playlistList.getSelectedValue()));
 					} catch (SQLException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
@@ -595,9 +603,10 @@ public class MainWindow {
 		
 		MouseListener deletePlaylistListener = new MouseAdapter() {
 			public void mousePressed(MouseEvent e) {
-				//Delete the user from the database
+				
 				try {
-					int playlistID = getPlaylistID((String) playlistList.getSelectedValue());
+					//Delete the playlist from the database
+					int playlistID = getPlaylistID(userID, (String) playlistList.getSelectedValue());
 					sql = "DELETE FROM `cs366-2187_reillyem11`.`playlist` WHERE (`playlist_ID` = '"+playlistID+"');";
 					PreparedStatement preparedStatement = (PreparedStatement) connection.prepareStatement(sql);
 					preparedStatement.executeUpdate();
@@ -606,6 +615,12 @@ public class MainWindow {
 					//Remove the playlist from the GUI
 					playlistModel.remove(playlistList.getSelectedIndex());
 					
+					//Remove all instances of the deleted playlist from the include table
+					System.out.println("PlaylistID: "+playlistID);
+					sql = "DELETE FROM `cs366-2187_reillyem11`.`include` WHERE (`playlist_ID` = '"+playlistID+"');";
+					preparedStatement = (PreparedStatement) connection.prepareStatement(sql);
+					preparedStatement.executeUpdate();
+					System.out.println("Deletion of playlist.");
 				} catch (SQLException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -614,11 +629,38 @@ public class MainWindow {
 			}
 		};
 		
+		MouseListener renamePlaylistListener = new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				
+				try {
+					String newPlaylistName = JOptionPane.showInputDialog("New Playlist Name");
+					String oldPlaylistName = (String) playlistList.getSelectedValue();
+					
+					if(!newPlaylistName.equals("")) {//make sure playlist name isn't empty
+						if(!playlistModel.contains(newPlaylistName)) {//make sure playlist name isn't a duplicate
+							int playlistID;
+							playlistID = getPlaylistID(userID, oldPlaylistName);
+							sql = "UPDATE `cs366-2187_reillyem11`.`playlist` SET `playlistName` = '"+newPlaylistName+"' WHERE (`playlist_ID` = '"+playlistID+"');";
+							PreparedStatement preparedStatement = (PreparedStatement) connection.prepareStatement(sql);
+							preparedStatement.executeUpdate();
+							updatePlaylists();
+						}
+					}
+			
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
+			}
+		};
+		
 		createPlaylistOption.addMouseListener(createPlaylistListener);
 		deletePlaylistOption.addMouseListener(deletePlaylistListener);
+		renamePlaylistOption.addMouseListener(renamePlaylistListener);
 		playlistMenu.add(createPlaylistOption);
+		playlistMenu.add(renamePlaylistOption);
 		playlistMenu.add(deletePlaylistOption);
-		
 		playlistList.addMouseListener(playlistListener);
 		
 		//*************Right click followed user option (to delete)*****************************************************************************
@@ -679,7 +721,6 @@ public class MainWindow {
 		
 		deleteOption.addMouseListener(deleteClick);
 		deleteMenu.add(deleteOption);
-		
 		followedList.addMouseListener(followedListener);
 		
 	  //*********************************************************************************************************//
@@ -773,10 +814,10 @@ public class MainWindow {
 		return songID;
 	}
 	
-	public int getPlaylistID(String playlistName) throws SQLException {
+	public int getPlaylistID(int user, String playlistName) throws SQLException {
 		
 		CallableStatement myCallStmt = (CallableStatement) connection.prepareCall("{call getPlaylistID(?,?)}");
-		myCallStmt.setInt(1, userID);
+		myCallStmt.setInt(1, user);
 		myCallStmt.setString(2, playlistName);
 		myCallStmt.execute();
 		ResultSet rs = myCallStmt.getResultSet();
