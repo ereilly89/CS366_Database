@@ -663,6 +663,13 @@ public class MainWindow {
 			    			deleteMenu.show(e.getComponent(), e.getX(), e.getY());
 		    			}
 				    }
+		    		
+		    		if(e.getClickCount() == 2) {
+		    			lblSongs.setText((String) followedList.getSelectedValue()+"'s Playlists");
+		    			displayFollowedPlaylists(getUserID((String)followedList.getSelectedValue()));
+		    			System.out.println("Followed Playlists User ID: "+getUserID((String)followedList.getSelectedValue()));
+		    			System.out.println("Followed user's playlist displayed.");
+		    		}
 		    	}catch (Exception ex) {
 		    		System.out.println("no selection made.");
 		    	}
@@ -680,6 +687,18 @@ public class MainWindow {
 	 //						METHODS													                           
 	
 	//********************************************************************************************************//
+	
+	public void displayFollowedPlaylists(int user) throws SQLException {
+		myCallStmt = (CallableStatement) connection.prepareCall("{call searchFollowedPlaylists(?)}");
+		myCallStmt.setInt(1, user);
+		myCallStmt.execute();
+		ResultSet rs = myCallStmt.getResultSet();
+		searchModel.clear();
+		
+		while(rs.next()) {
+			searchModel.addElement(rs.getString(1));
+		}
+	}
 	
 	public void displayArtistsSongs(String artist) throws SQLException {
 		myCallStmt = (CallableStatement) connection.prepareCall("{call displayArtistsSongs(?)}");
