@@ -1,6 +1,6 @@
 # Song-Database-Application
 
-Song Dataset Application - Final Report
+Final Report
 
 Evan Reilly, Luke Lamberg
 
