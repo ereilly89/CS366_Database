@@ -25,19 +25,19 @@ The “Million Song Dataset” the application uses is actually a subset of the 
 
 2.4   Relational model 
 
-Song(SongID, title, duration, familiarity, key, keyConfidence, latitude, longitude, loudness, barsStart, similar, songHottness, tempo, timeSignature, timeSignatureConfidence, ArtistID, AlbumID)
-	SongID is primary key
-Artist(ArtistID, artistName, artistHottness, artistMBTags)
-	ArtistID is primary key
-Album(AlbumID, albumName, releaseYear, ArtistID)
-	AlbumID is primary key
-User(UserID, username, password)
-	UserID is primary key
-Playlist(PlaylistID, playlistName, UserID)
-	PlaylistID is primary key
-	username is also a key
+Song(SongID(primary key), title, duration, familiarity, key, keyConfidence, latitude, longitude, loudness, barsStart, similar, songHottness, tempo, timeSignature, timeSignatureConfidence, ArtistID, AlbumID)
+	
+Artist(ArtistID(primary key), artistName, artistHottness, artistMBTags)
+
+Album(AlbumID(primary key), albumName, releaseYear, ArtistID)
+
+User(UserID(primary key), username, password)
+	
+Playlist(PlaylistID(primary key), playlistName, UserID)
+	
 Include(PlaylistID, SongID)
 SongID & PlaylistID are the primary key (composite key)
+
 Follow(UserID, UserID)
 UserID & UserID are the primary key (composite key)
 
